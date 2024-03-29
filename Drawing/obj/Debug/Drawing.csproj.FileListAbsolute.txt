@@ -1,0 +1,10 @@
+D:\Programing\Projects\C#\Drawing\Drawing\bin\Debug\Drawing.exe.config
+D:\Programing\Projects\C#\Drawing\Drawing\bin\Debug\Drawing.exe
+D:\Programing\Projects\C#\Drawing\Drawing\bin\Debug\Drawing.pdb
+D:\Programing\Projects\C#\Drawing\Drawing\obj\Debug\Drawing.csproj.AssemblyReference.cache
+D:\Programing\Projects\C#\Drawing\Drawing\obj\Debug\Drawing.Form1.resources
+D:\Programing\Projects\C#\Drawing\Drawing\obj\Debug\Drawing.Properties.Resources.resources
+D:\Programing\Projects\C#\Drawing\Drawing\obj\Debug\Drawing.csproj.GenerateResource.cache
+D:\Programing\Projects\C#\Drawing\Drawing\obj\Debug\Drawing.csproj.CoreCompileInputs.cache
+D:\Programing\Projects\C#\Drawing\Drawing\obj\Debug\Drawing.exe
+D:\Programing\Projects\C#\Drawing\Drawing\obj\Debug\Drawing.pdb
