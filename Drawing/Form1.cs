@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Drawing.classes;
 
@@ -16,7 +10,6 @@ namespace Drawing
         public Form1()
         {
             InitializeComponent();
-
         }
 
         Graphics g;
@@ -29,7 +22,7 @@ namespace Drawing
             bool isUndirected = false;
             switch (comboBox1.SelectedIndex)
             {
-                case 0: 
+                case 0:
                     graph = new UndirectedGraph(int.Parse(textBox1.Text), 0.6f * Width, panel1.Top);
                     isUndirected = true;
                     break;
@@ -37,10 +30,9 @@ namespace Drawing
                     graph = new DirectedGraph(int.Parse(textBox1.Text), 0.6f * Width, panel1.Top);
                     break;
             }
-            GraphDrawing.DrawMatrix(graph, g, new PointF(0.6f * Width, 0), new PointF(Width, Height));
-            GraphDrawing.DrawGraph(graph, g, isUndirected);
-            
-        }
 
+            GraphDrawing.DrawMatrix(graph, g, new PointF(0.6f * Width, 0), new PointF(Width, panel1.Top));
+            GraphDrawing.DrawGraph(graph, g, isUndirected);
+        }
     }
 }

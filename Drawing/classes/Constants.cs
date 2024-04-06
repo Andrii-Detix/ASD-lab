@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Drawing;
 
 namespace Drawing.classes
 {
     internal static class Constants
     {
-        public const float radius = 14.5f;
-        public const float diameter = 2 * radius;
-        public static readonly Font font = new Font("Times New Roman", radius);
-
+        public const float Radius = 14.5f;
+        public const float Diameter = 2 * Radius;
+        public const string FamilyName = "Times New Roman";
+        public static readonly Font Font = new Font(FamilyName, Radius);
     }
 }
