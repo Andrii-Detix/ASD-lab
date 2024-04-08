@@ -10,6 +10,7 @@ namespace Drawing
         public Form1()
         {
             InitializeComponent();
+            g = CreateGraphics();
         }
 
         Graphics g;
@@ -17,7 +18,7 @@ namespace Drawing
 
         private void textBox1_Start(object sender, EventArgs e)
         {
-            g = CreateGraphics();
+            
             g.Clear(Color.White);
             bool isUndirected = false;
             switch (comboBox1.SelectedIndex)

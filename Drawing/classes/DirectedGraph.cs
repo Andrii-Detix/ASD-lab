@@ -119,17 +119,14 @@ class UndirectedGraph : DirectedGraph
     protected override int[,] CreateMatrix(int length, int[] variantNumbers)
     {
         int[,] matrix = base.CreateMatrix(length, variantNumbers);
-        int index = 0;
         for (int i = 0; i < Length; i++)
         {
-            for (int j = 0; j < index; j++)
+            for (int j = 0; j < Length; j++)
             {
-                matrix[j, i] = matrix[i, j];
+                if(matrix[i,j] == 1)
+                    matrix[j,i] = matrix[i,j];
             }
-
-            index++;
         }
-
         return matrix;
     }
 }

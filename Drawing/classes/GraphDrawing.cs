@@ -92,10 +92,12 @@ namespace Drawing.classes
             lastP = graph.NodePoints[lastIndex];
             for (int i = 0; i < graph.Length; i++)
             {
-                for (int j = index; j < graph.Length; j++)
+                for (int j = 0; j < graph.Length; j++)
                 {
                     if (graph.Matrix[i, j] == 1)
                     {
+                        if(isUndirected && graph.Matrix[j,i]==1 && j<index)
+                            continue;
                         count++;
                         from = graph.NodePoints[i];
                         to = graph.NodePoints[j];
