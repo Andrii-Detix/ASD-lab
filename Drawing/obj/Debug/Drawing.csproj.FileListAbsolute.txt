@@ -8,3 +8,4 @@ D:\Programing\Projects\C#\Drawing\Drawing\obj\Debug\Drawing.csproj.GenerateResou
 D:\Programing\Projects\C#\Drawing\Drawing\obj\Debug\Drawing.csproj.CoreCompileInputs.cache
 D:\Programing\Projects\C#\Drawing\Drawing\obj\Debug\Drawing.exe
 D:\Programing\Projects\C#\Drawing\Drawing\obj\Debug\Drawing.pdb
+D:\Programing\Projects\C#\Drawing\Drawing\obj\Debug\Drawing.Form2.resources

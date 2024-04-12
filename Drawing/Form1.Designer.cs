@@ -85,7 +85,8 @@
             this.comboBox1.FormattingEnabled = true;
             this.comboBox1.Items.AddRange(new object[] {
             "Undirected graph",
-            "Directed graph"});
+            "Directed graph 1",
+            "Directed graph 2"});
             this.comboBox1.Location = new System.Drawing.Point(475, 13);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(285, 39);

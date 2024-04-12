@@ -1,22 +1,33 @@
 ﻿using System;
 using System.Drawing;
-using Drawing.classes;
 
 namespace Drawing.classes
 {
-    class DirectedGraph
+    public class DirectedGraph 
     {
-        public DirectedGraph(int variant, float width, float height)
+        public DirectedGraph(int variant, double[] coefs, float width, float height)
         {
             int[] numbers = HelpMethods.GetNumbers(variant);
             Length = 10 + numbers[3];
-            Matrix = CreateMatrix(Length, numbers);
+            Matrix = CreateMatrix(Length, numbers, coefs);
             NodePoints = CreatePoints(width, height);
+            IsDirected = CheckDirection();
         }
 
-        public readonly int Length;
+        public DirectedGraph(int[,] matrix, float width, float height)
+        {
+            Matrix = matrix;
+            Length = matrix.GetLength(0);
+            NodePoints = Length ==4? CreateFourPoints(width,height):CreatePoints(width, height);
+            IsDirected = CheckDirection();
+        }
+
+
+
+        public int Length { get; }
         public PointF[] NodePoints { get; }
-        public int[,] Matrix { get; private set; }
+        public int[,] Matrix { get; }
+        public readonly bool IsDirected  ;
 
 
         protected double[,] FillMatrix(double[,] matrix, int seed)
@@ -32,6 +43,7 @@ namespace Drawing.classes
 
             return matrix;
         }
+        
 
         protected int[,] MulMatrix(double[,] matrix, double k)
         {
@@ -48,11 +60,13 @@ namespace Drawing.classes
             return intMatrix;
         }
 
-        protected virtual int[,] CreateMatrix(int length, int[] variantNumbers)
+        protected virtual int[,] CreateMatrix(int length, int[] varianNumbers, double[] coefs)
         {
             double[,] matrix = new double[length, length];
-            matrix = FillMatrix(matrix, variantNumbers[0]);
-            double k = 1 - 0.02 * variantNumbers[3] - 0.005 * variantNumbers[4] - 0.25;
+            matrix = FillMatrix(matrix, varianNumbers[0]);
+            double k = coefs[0] ;
+            for (int i = 1; i < varianNumbers.Length; i++)
+                k += coefs[i] * varianNumbers[i];
             return MulMatrix(matrix, k);
         }
 
@@ -82,7 +96,7 @@ namespace Drawing.classes
                 posY += distY;
                 counter++;
             }
-
+            
             if (isOdd)
             {
                 distX *= (float)lineIntervalsNum / (lineIntervalsNum + 1);
@@ -107,26 +121,49 @@ namespace Drawing.classes
             points[counter] = new PointF(width / 2, height / 2);
             return points;
         }
-    }
-}
-
-class UndirectedGraph : DirectedGraph
-{
-    public UndirectedGraph(int variant, float width, float height) : base(variant, width, height)
-    {
-    }
-
-    protected override int[,] CreateMatrix(int length, int[] variantNumbers)
-    {
-        int[,] matrix = base.CreateMatrix(length, variantNumbers);
-        for (int i = 0; i < Length; i++)
+        private PointF[] CreateFourPoints(float width, float height)
         {
-            for (int j = 0; j < Length; j++)
-            {
-                if(matrix[i,j] == 1)
-                    matrix[j,i] = matrix[i,j];
-            }
+            float borderCoef = 0.15f;
+            PointF[] points = new PointF[4];
+            float posX = width * borderCoef;
+            float posY = height * borderCoef;
+            float distX = width - width * (1-2 * borderCoef);
+            float distY = height - height * (1 - 2 * borderCoef);
+            points[0] = new PointF(posX, posY);
+            posX += distX;
+            points[1] = new PointF(posX, posY);
+            posY += distY;
+            points[2] = new PointF(posX, posY);
+            points[3] = new PointF(points[0].X, posY);
+            return points;
         }
-        return matrix;
+
+        protected virtual bool CheckDirection() => true;
+    }
+
+
+    public class UndirectedGraph : DirectedGraph
+    {
+        public UndirectedGraph(int variant,double[]coefs, float width, float height) : base(variant, coefs, width, height)
+        {
+            
+        }
+
+        protected override int[,] CreateMatrix(int length, int[] variantNumbers, double[] coefs)
+        {
+            int[,] matrix = base.CreateMatrix(length, variantNumbers, coefs);
+            for (int i = 0; i < Length; i++)
+            {
+                for (int j = 0; j < Length; j++)
+                {
+                    if (matrix[i, j] == 1)
+                        matrix[j, i] = matrix[i, j];
+                }
+            }
+
+            return matrix;
+        }
+
+        protected override bool CheckDirection() => false;
     }
 }

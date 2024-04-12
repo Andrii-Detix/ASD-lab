@@ -12,15 +12,16 @@ namespace Drawing.classes
         /// <param name="g">екземпляр класу Graphics</param>
         /// <param name="startPos">точка, з якої починається виведення матриці</param>
         /// <param name="endPos">крайня можлива точка для виведення матриці</param>
-        public static void DrawMatrix(DirectedGraph graph, Graphics g, PointF startPos, PointF endPos)
+        public static void DrawMatrix(int[,] matrix, Graphics g,string name, PointF startPos, PointF endPos)
         {
-            string str = string.Empty;
-            int lastIndex = graph.Length - 1;
-            for (int i = 0; i < graph.Length; i++)
+            int length = matrix.GetLength(0);
+            string str = name+"\n";
+            int lastIndex = length - 1;
+            for (int i = 0; i < length; i++)
             {
-                for (int j = 0; j < graph.Length; j++)
+                for (int j = 0; j <length; j++)
                 {
-                    str += Convert.ToString(graph.Matrix[i, j]);
+                    str += Convert.ToString(matrix[i, j]);
                     if (j == lastIndex) break;
                     str += " ";
                 }
@@ -44,9 +45,9 @@ namespace Drawing.classes
         /// <param name="graph">граф, який потрібно зобразити</param>
         /// <param name="g">екземпляр класу Graphics</param>
         /// <param name="isUndirected">вказує на те, чи граф ненапрямлений</param>
-        public static void DrawGraph(DirectedGraph graph, Graphics g, bool isUndirected)
+        public static void DrawGraph(DirectedGraph graph, Graphics g)
         {
-            DrawConnection(graph, g, isUndirected);
+            DrawConnection(graph, g);
             DrawNodes(graph, g);
         }
 
@@ -77,11 +78,11 @@ namespace Drawing.classes
         /// <param name="graph">граф, який потрібно зобразити</param>
         /// <param name="g">екземпляр класу Graphics</param>
         /// <param name="isUndirected">вказує на те, чи граф ненапрямлений</param>
-        private static void DrawConnection(DirectedGraph graph, Graphics g, bool isUndirected = false)
+        private static void DrawConnection(DirectedGraph graph, Graphics g)
         {
             int count = 0;
             Pen pen = new Pen(Brushes.Blue, 1);
-            if (!isUndirected)
+            if (graph.IsDirected)
                 pen.CustomEndCap = new System.Drawing.Drawing2D.AdjustableArrowCap(3, 4);
             int index = 0;
             int lastIndex = graph.Length - 1;
@@ -96,7 +97,7 @@ namespace Drawing.classes
                 {
                     if (graph.Matrix[i, j] == 1)
                     {
-                        if(isUndirected && graph.Matrix[j,i]==1 && j<index)
+                        if(!graph.IsDirected && graph.Matrix[j,i]==1 && j<index)
                             continue;
                         count++;
                         from = graph.NodePoints[i];
@@ -274,7 +275,7 @@ namespace Drawing.classes
                     }
                 }
 
-                if (isUndirected) index++;
+                if (!graph.IsDirected) index++;
             }
         }
 
