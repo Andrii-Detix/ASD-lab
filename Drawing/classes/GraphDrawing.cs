@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 
 namespace Drawing.classes
 {
@@ -12,14 +14,14 @@ namespace Drawing.classes
         /// <param name="g">екземпляр класу Graphics</param>
         /// <param name="startPos">точка, з якої починається виведення матриці</param>
         /// <param name="endPos">крайня можлива точка для виведення матриці</param>
-        public static void DrawMatrix(int[,] matrix, Graphics g,string name, PointF startPos, PointF endPos)
+        public static void DrawMatrix(int[,] matrix, Graphics g, string name, PointF startPos, PointF endPos)
         {
             int length = matrix.GetLength(0);
-            string str = name+"\n";
+            string str = name + "\n";
             int lastIndex = length - 1;
             for (int i = 0; i < length; i++)
             {
-                for (int j = 0; j <length; j++)
+                for (int j = 0; j < length; j++)
                 {
                     str += Convert.ToString(matrix[i, j]);
                     if (j == lastIndex) break;
@@ -47,8 +49,8 @@ namespace Drawing.classes
         /// <param name="isUndirected">вказує на те, чи граф ненапрямлений</param>
         public static void DrawGraph(DirectedGraph graph, Graphics g)
         {
-            DrawConnection(graph, g);
-            DrawNodes(graph, g);
+            DrawAllConnection(graph, g);
+            DrawAllNodes(graph, g);
         }
 
         /// <summary>
@@ -56,19 +58,205 @@ namespace Drawing.classes
         /// </summary>
         /// <param name="graph">граф, який потрібно зобразити</param>
         /// <param name="g">екземпляр класу Graphics</param>
-        private static void DrawNodes(DirectedGraph graph, Graphics g)
+        public static void DrawAllNodes(DirectedGraph graph, Graphics g)
+        {
+            for (int i = 0; i < graph.Length; i++)
+            {
+                DrawNode(graph, i, g, Brushes.Black);
+            }
+        }
+
+        public static void DrawNode(DirectedGraph graph, int index, Graphics g, Brush color)
         {
             string str;
             PointF pos = new PointF();
-            for (int i = 0; i < graph.Length; i++)
+            pos.X = graph.NodePoints[index].X - Constants.Radius;
+            pos.Y = graph.NodePoints[index].Y - Constants.Radius;
+            str = Convert.ToString(index + 1);
+            g.FillEllipse(color, pos.X, pos.Y, Constants.Diameter, Constants.Diameter);
+            pos.X += Constants.Radius / 4;
+            pos.Y += Constants.Radius / 4;
+            g.DrawString(str, Constants.Font, Brushes.White, pos);
+        }
+
+        public static void DrawConnection(DirectedGraph graph, int fromIdx, int toIdx,Graphics g, Pen pen)
+        {
+            int dif = toIdx - fromIdx;
+            int count = fromIdx + toIdx;
+            int lastIndex = graph.Length - 1;
+            PointF from = graph.NodePoints[fromIdx];
+            PointF to = graph.NodePoints[toIdx];
+            PointF lastP = graph.NodePoints[lastIndex];
+            if (fromIdx == toIdx)
             {
-                pos.X = graph.NodePoints[i].X - Constants.Radius;
-                pos.Y = graph.NodePoints[i].Y - Constants.Radius;
-                str = Convert.ToString(i + 1);
-                g.FillEllipse(Brushes.Black, pos.X, pos.Y, Constants.Diameter, Constants.Diameter);
-                pos.X += Constants.Radius / 4;
-                pos.Y += Constants.Radius / 4;
-                g.DrawString(str, Constants.Font, Brushes.White, pos);
+                g.DrawArc(pen, from.X, from.Y - Constants.Diameter, Constants.Diameter, Constants.Diameter,
+                    180, 270);
+            }
+            //Малює пряму, якщо різниця між номерами вершин рівна 1, або якщо одне з ребер останнє
+            else if (dif == 1 || dif == -1 || toIdx == lastIndex || toIdx == lastIndex)
+            {
+                DrawLine(pen, from, to, g);
+            }
+            else
+            {
+                //Знаходимо сусідні вершини до початкової та кінцевої точки, щоб вони знаходилися 
+                //в прямокутному трикутнику обмеженому почоковою та кінцевою точками.
+                PointF firstNeighbour = graph.NodePoints[HelpMethods.CheckIndexLim(toIdx + 1, lastIndex - 1)];
+                PointF lastNeighbour = graph.NodePoints[HelpMethods.CheckIndexLim(toIdx - 1, lastIndex - 1)];
+                if (!(CheckMidPos(from, to, firstNeighbour) &&
+                      CheckMidPos(from, to, lastNeighbour)))
+                {
+                    firstNeighbour = graph.NodePoints[HelpMethods.CheckIndexLim(toIdx - 1, lastIndex - 1)];
+                    lastNeighbour = graph.NodePoints[HelpMethods.CheckIndexLim(toIdx + 1, lastIndex - 1)];
+                }
+
+                //Знаходимо точки на колах вершин так, щоб пряма, яка їх з'єднує була паралельна
+                //найкоротншій відстані
+                PointF[] points = ParallelDisPlaceOnCircles(from, to, 45);
+                // first, second - допоміжні точки
+                PointF first = points[0];
+                PointF second = points[1];
+                //Перевіряємо, чи пряма, утвореними цими точками, не перетинає центральну вершину
+                //та вершини сусідніх точок
+                if (!(LineIntersectsCircle(first, second, firstNeighbour) ||
+                      LineIntersectsCircle(first, second, lastNeighbour) ||
+                      LineIntersectsCircle(first, second, lastP)))
+                    g.DrawLine(pen, first, second);
+
+                else
+                {
+                    float coef = 0.7f;
+                    PointF middle = new PointF();
+                    PointF[] drawPoints;
+                    bool changeEndPos = true;
+                    //Якщо точки знаходяться на одній стороні, зображуємо ламану
+                    if (from.X == to.X)
+                    {
+                        float bias = (to.Y - from.Y) * coef;
+                        middle.Y = from.Y + bias;
+                        if (to.Y > from.Y)
+                        {
+                            from.X -= Constants.Radius;
+                            middle.X = from.X - Constants.Diameter;
+                        }
+                        else
+                        {
+                            from.X += Constants.Radius;
+                            middle.X = from.X + Constants.Diameter;
+                        }
+                    }
+                    //Якщо точки знаходяться на одній стороні, зображуємо ламану
+                    else if (from.Y == to.Y)
+                    {
+                        float bias = (to.X - from.X) * coef;
+                        middle.X = from.X + bias;
+                        if (to.X > from.X)
+                        {
+                            from.Y -= Constants.Radius;
+                            middle.Y = from.Y - Constants.Diameter;
+                        }
+                        else
+                        {
+                            from.Y += Constants.Radius;
+                            middle.Y = from.Y + Constants.Diameter;
+                        }
+                    }
+
+                    else
+                    {
+                        coef = 0.6f + count % 10 / 50f;
+                        float width = to.X - from.X;
+                        float height = to.Y - from.Y;
+                        //Перевіряємо, чи усі точки знаходяться по один бік по довжині від
+                        //центральної вершини
+                        if (HelpMethods.CheckSamePos(from.X, to.X, lastP.X))
+                        {
+                            middle.Y = from.Y + height * coef;
+                            middle.X = (from.X + to.X + lastP.X) / 3;
+                            //Змінюємо довжину, допоки ламана, побудована на точках,
+                            //перетинатиме центральну вершину
+                            while (CheckCenterIntersect(from, middle, to, lastP))
+                            {
+                                middle.X += (from.X < lastP.X || to.X < lastP.X)
+                                    ? -Constants.Diameter
+                                    : Constants.Diameter;
+                            }
+                        }
+                        else
+                        {
+                            //Перевіряємо, чи усі точки знаходяться по один бік по висоті від
+                            //центральної вершини
+                            if (HelpMethods.CheckSamePos(from.Y, to.Y, lastP.Y))
+                            {
+                                middle.Y = (from.Y + to.Y + lastP.Y) / 3;
+                                middle.X = from.X + width * coef;
+                                //Змінюємо висоту, допоки ламана, побудована на точках,
+                                //перетинатиме центральну вершину
+                                while (CheckCenterIntersect(from, middle, to, lastP))
+                                {
+                                    middle.Y += (from.Y < lastP.Y || to.Y < lastP.Y)
+                                        ? -Constants.Diameter
+                                        : Constants.Diameter;
+                                }
+                            }
+                            //Точки знаходяться в протилежних чвертях
+                            else
+                            {
+                                middle.Y = from.Y + height * coef;
+                                middle.X = (from.X + lastP.X) / 2;
+                                first = middle;
+                                second = middle;
+                                //Змінюємо довжину чи висоту допоки ламана, побудована на точках,
+                                //перетинатиме центральну вершину
+                                while (true)
+                                {
+                                    if (CheckCenterIntersect(from, second, to, lastP))
+                                    {
+                                        first.Y += from.Y < lastP.Y
+                                            ? -Constants.Diameter
+                                            : Constants.Diameter;
+                                        if (CheckCenterIntersect(from, first, to, lastP))
+                                        {
+                                            second.X += from.X < lastP.X
+                                                ? -Constants.Diameter
+                                                : Constants.Diameter;
+                                        }
+                                        else
+                                        {
+                                            middle = first;
+                                            break;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        middle = second;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        //Якщо ламана перетинатиме сусідні вершини, то змінюємо кути нахилу прямих
+                        //з яких складається дана ламана
+                        if (LineIntersectsCircle(from, middle, firstNeighbour))
+                            from = BiasPointF(from, middle, firstNeighbour);
+                        else
+                        {
+                            from = FindPointOnContour(middle, from);
+                        }
+                        if (LineIntersectsCircle(to, middle, lastNeighbour))
+                        {
+                            to = BiasPointF(to, middle, lastNeighbour);
+                            changeEndPos = false;
+                        }
+                    }
+
+                    //Зображуємо ламану
+                    if (changeEndPos)
+                        to = FindPointOnContour(middle, to);
+                    drawPoints = new PointF[] { from, middle, to };
+                    g.DrawLines(pen, drawPoints);
+                }
             }
         }
 
@@ -78,200 +266,22 @@ namespace Drawing.classes
         /// <param name="graph">граф, який потрібно зобразити</param>
         /// <param name="g">екземпляр класу Graphics</param>
         /// <param name="isUndirected">вказує на те, чи граф ненапрямлений</param>
-        private static void DrawConnection(DirectedGraph graph, Graphics g)
+        private static void DrawAllConnection(DirectedGraph graph, Graphics g)
         {
-            int count = 0;
             Pen pen = new Pen(Brushes.Blue, 1);
             if (graph.IsDirected)
                 pen.CustomEndCap = new System.Drawing.Drawing2D.AdjustableArrowCap(3, 4);
             int index = 0;
-            int lastIndex = graph.Length - 1;
-            // dif - різниця між номерами вершин
-            int dif;
-            //from - початкова точка, to - кінцева точка, lastP - кооридинати центра останньої вершини
-            PointF from, to, lastP;
-            lastP = graph.NodePoints[lastIndex];
             for (int i = 0; i < graph.Length; i++)
             {
                 for (int j = 0; j < graph.Length; j++)
                 {
                     if (graph.Matrix[i, j] == 1)
                     {
-                        if(!graph.IsDirected && graph.Matrix[j,i]==1 && j<index)
+                        if (!graph.IsDirected && graph.Matrix[j, i] == 1 && j < index)
                             continue;
-                        count++;
-                        from = graph.NodePoints[i];
-                        to = graph.NodePoints[j];
-                        dif = j - i;
-
-                        //Малює з'єднання вершини з собою
-                        if (i == j)
-                        {
-                            g.DrawArc(pen, from.X, from.Y - Constants.Diameter, Constants.Diameter, Constants.Diameter,
-                                180, 270);
-                        }
-                        //Малює пряму, якщо різниця між номерами вершин рівна 1, або якщо одне з ребер останнє
-                        else if (dif == 1 || dif == -1 || j == lastIndex || i == lastIndex)
-                        {
-                            DrawLine(pen, from, to, g);
-                        }
-                        else
-                        {
-                            //Знаходимо сусідні вершини до початкової та кінцевої точки, щоб вони знаходилися 
-                            //в прямокутному трикутнику обмеженому почоковою та кінцевою точками.
-                            PointF firstNeighbour = graph.NodePoints[HelpMethods.CheckIndexLim(i + 1, lastIndex - 1)];
-                            PointF lastNeighbour = graph.NodePoints[HelpMethods.CheckIndexLim(j - 1, lastIndex - 1)];
-                            if (!(CheckMidPos(from, to, firstNeighbour) &&
-                                  CheckMidPos(from, to, lastNeighbour)))
-                            {
-                                firstNeighbour = graph.NodePoints[HelpMethods.CheckIndexLim(i - 1, lastIndex - 1)];
-                                lastNeighbour = graph.NodePoints[HelpMethods.CheckIndexLim(j + 1, lastIndex - 1)];
-                            }
-
-                            //Знаходимо точки на колах вершин так, щоб пряма, яка їх з'єднує була паралельна
-                            //найкоротншій відстані
-                            PointF[] points = ParallelDisPlaceOnCircles(from, to, 45);
-                            // first, second - допоміжні точки
-                            PointF first = points[0];
-                            PointF second = points[1];
-                            //Перевіряємо, чи пряма, утвореними цими точками, не перетинає центральну вершину
-                            //та вершини сусідніх точок
-                            if (!(LineIntersectsCircle(first, second, firstNeighbour) ||
-                                  LineIntersectsCircle(first, second, lastNeighbour) ||
-                                  LineIntersectsCircle(first, second, lastP)))
-                                g.DrawLine(pen, first, second);
-
-                            else
-                            {
-                                float coef = 0.7f;
-                                PointF middle = new PointF();
-                                PointF[] drawPoints;
-                                bool changeEndPos = true;
-                                //Якщо точки знаходяться на одній стороні, зображуємо ламану
-                                if (from.X == to.X)
-                                {
-                                    float bias = (to.Y - from.Y) * coef;
-                                    middle.Y = from.Y + bias;
-                                    if (to.Y > from.Y)
-                                    {
-                                        from.X -= Constants.Radius;
-                                        middle.X = from.X - Constants.Diameter;
-                                    }
-                                    else
-                                    {
-                                        from.X += Constants.Radius;
-                                        middle.X = from.X + Constants.Diameter;
-                                    }
-                                }
-                                //Якщо точки знаходяться на одній стороні, зображуємо ламану
-                                else if (from.Y == to.Y)
-                                {
-                                    float bias = (to.X - from.X) * coef;
-                                    middle.X = from.X + bias;
-                                    if (to.X > from.X)
-                                    {
-                                        from.Y -= Constants.Radius;
-                                        middle.Y = from.Y - Constants.Diameter;
-                                    }
-                                    else
-                                    {
-                                        from.Y += Constants.Radius;
-                                        middle.Y = from.Y + Constants.Diameter;
-                                    }
-                                }
-
-                                else
-                                {
-                                    coef = 0.6f + count % 10 / 50f;
-                                    float width = to.X - from.X;
-                                    float height = to.Y - from.Y;
-                                    //Перевіряємо, чи усі точки знаходяться по один бік по довжині від
-                                    //центральної вершини
-                                    if (HelpMethods.CheckSamePos(from.X, to.X, lastP.X))
-                                    {
-                                        middle.Y = from.Y + height * coef;
-                                        middle.X = (from.X + to.X + lastP.X) / 3;
-                                        //Змінюємо довжину, допоки ламана, побудована на точках,
-                                        //перетинатиме центральну вершину
-                                        while (CheckCenterIntersect(from, middle, to, lastP))
-                                        {
-                                            middle.X += (from.X < lastP.X || to.X < lastP.X)
-                                                ? -Constants.Diameter
-                                                : Constants.Diameter;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        //Перевіряємо, чи усі точки знаходяться по один бік по висоті від
-                                        //центральної вершини
-                                        if (HelpMethods.CheckSamePos(from.Y, to.Y, lastP.Y))
-                                        {
-                                            middle.Y = (from.Y + to.Y + lastP.Y) / 3;
-                                            middle.X = from.X + width * coef;
-                                            //Змінюємо висоту, допоки ламана, побудована на точках,
-                                            //перетинатиме центральну вершину
-                                            while (CheckCenterIntersect(from, middle, to, lastP))
-                                            {
-                                                middle.Y += (from.Y < lastP.Y || to.Y < lastP.Y)
-                                                    ? -Constants.Diameter
-                                                    : Constants.Diameter;
-                                            }
-                                        }
-                                        //Точки знаходяться в протилежних чвертях
-                                        else
-                                        {
-                                            middle.Y = from.Y + height * coef;
-                                            middle.X = (from.X + lastP.X) / 2;
-                                            first = middle;
-                                            second = middle;
-                                            //Змінюємо довжину чи висоту допоки ламана, побудована на точках,
-                                            //перетинатиме центральну вершину
-                                            while (true)
-                                            {
-                                                if (CheckCenterIntersect(from, second, to, lastP))
-                                                {
-                                                    first.Y += from.Y < lastP.Y
-                                                        ? -Constants.Diameter
-                                                        : Constants.Diameter;
-                                                    if (CheckCenterIntersect(from, first, to, lastP))
-                                                    {
-                                                        second.X += from.X < lastP.X
-                                                            ? -Constants.Diameter
-                                                            : Constants.Diameter;
-                                                    }
-                                                    else
-                                                    {
-                                                        middle = first;
-                                                        break;
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    middle = second;
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    //Якщо ламана перетинатиме сусідні вершини, то змінюємо кути нахилу прямих
-                                    //з яких складається дана ламана
-                                    if (LineIntersectsCircle(from, middle, firstNeighbour))
-                                        from = BiasPointF(from, middle, firstNeighbour);
-                                    if (LineIntersectsCircle(to, middle, lastNeighbour))
-                                    {
-                                        to = BiasPointF(to, middle, lastNeighbour);
-                                        changeEndPos = false;
-                                    }
-                                }
-
-                                //Зображуємо ламану
-                                if (changeEndPos)
-                                    to = FindPointOnContour(middle, to);
-                                drawPoints = new PointF[] { from, middle, to };
-                                g.DrawLines(pen, drawPoints);
-                            }
-                        }
+                        
+                        DrawConnection(graph, i, j, g,pen);
                     }
                 }
 
@@ -429,6 +439,14 @@ namespace Drawing.classes
             from.X = (float)(from.X + Math.Cos(mainAngle) * Constants.Radius);
             from.Y = (float)(from.Y + Math.Sin(mainAngle) * Constants.Radius);
             return from;
+        }
+
+        public static Brush GetRandomColor()
+        {
+            Random random = new Random();
+            Color col = Color.FromArgb(random.Next(0, 256), random.Next(0, 256), random.Next(0, 256));
+            Brush brush = new SolidBrush( col );
+            return brush;
         }
     }
 }

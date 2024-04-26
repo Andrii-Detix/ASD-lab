@@ -11,7 +11,7 @@ namespace Drawing.classes
             int[] arr = VertexDegree(graph);
             for (int i = 0; i < graph.Length; i++)
             {
-                str += $"deg({i+1}) = {arr[i]}; ";
+                str += $"deg({i + 1}) = {arr[i]}; ";
             }
 
             if (graph.IsDirected)
@@ -20,15 +20,17 @@ namespace Drawing.classes
                 arr = PosVertexHalfDegree(graph);
                 for (int i = 0; i < graph.Length; i++)
                 {
-                    str += $"deg+({i+1}) = {arr[i]}; ";
+                    str += $"deg+({i + 1}) = {arr[i]}; ";
                 }
+
                 str += "\r\nНегативні напівстепені: ";
                 arr = NegVertexHalfDegree(graph);
                 for (int i = 0; i < graph.Length; i++)
                 {
-                    str += $"deg-({i+1}) = {arr[i]}; ";
+                    str += $"deg-({i + 1}) = {arr[i]}; ";
                 }
             }
+
             str += "\r\nСтепінь однорідності: ";
             int regulDeg = CheckGraphRegularity(graph);
             str += (regulDeg == -1 ? $"-\r\n" : $"{regulDeg}\r\n");
@@ -37,7 +39,7 @@ namespace Drawing.classes
             int arrLength = arr.Length;
             if (arr.Length == 0)
                 str += "-\r\n";
-            for(int i = 0; i<arrLength;i++)
+            for (int i = 0; i < arrLength; i++)
             {
                 str += $"{arr[i] + 1}";
                 str += (i == arrLength - 1 ? ";\r\n" : ", ");
@@ -48,7 +50,7 @@ namespace Drawing.classes
             arrLength = arr.Length;
             if (arr.Length == 0)
                 str += "-\r\n";
-            for(int i = 0; i<arrLength;i++)
+            for (int i = 0; i < arrLength; i++)
             {
                 str += $"{arr[i] + 1}";
                 str += (i == arrLength - 1 ? ";\r\n" : ", ");
@@ -56,42 +58,47 @@ namespace Drawing.classes
 
             return str;
         }
+
         public static string ShowWays(DirectedGraph graph, int length)
         {
             string str = $"Шляхи довжиною {length}: ";
             int[][][] ways = length == 1 ? GetOneWays(graph) : FindWays(graph, length);
-            for(int i = 0; i < ways.Length; i++)
+            for (int i = 0; i < ways.Length; i++)
             {
-                for(int j = 0; j < ways[i].Length; j++)
+                for (int j = 0; j < ways[i].Length; j++)
                 {
-
                     str += "[";
                     for (int k = 0; k < ways[i][j].Length; k++)
                     {
-                        str += $"{ways[i][j][k]+1}";
+                        str += $"{ways[i][j][k] + 1}";
                         if (k != ways[i][j].Length - 1)
                             str += "-";
                     }
+
                     str += "]; ";
                 }
             }
+
             return str;
         }
+
         public static string ShowConnectComponents(DirectedGraph graph)
         {
             string str = $"Компоненти зв'язоності: \r\n";
             int[][] components = GetConnectComponents(graph);
-            for(int i = 0;i < components.Length; i++)
+            for (int i = 0; i < components.Length; i++)
             {
                 str += $"Компонента {i + 1}: ";
-                for (int j = 0;j < components[i].Length; j++)
+                for (int j = 0; j < components[i].Length; j++)
                 {
                     str += $"{components[i][j] + 1}";
                     str += (j == components[i].Length - 1 ? ";\r\n" : ", ");
                 }
             }
+
             return str;
         }
+
         public static int[] VertexDegree(DirectedGraph graph)
         {
             int[] result = new int[graph.Length];
@@ -108,7 +115,8 @@ namespace Drawing.classes
                         result[j]++;
                     }
                 }
-                if(!graph.IsDirected)
+
+                if (!graph.IsDirected)
                     index++;
             }
 
@@ -180,7 +188,7 @@ namespace Drawing.classes
             List<int> vertices = new List<int>();
             for (int i = 0; i < graph.Length; i++)
             {
-                if (degrees[i] == 0 || degrees[i] == 2 && graph.Matrix[i,i] ==1)
+                if (degrees[i] == 0 || degrees[i] == 2 && graph.Matrix[i, i] == 1)
                     vertices.Add(i);
             }
 
@@ -204,9 +212,9 @@ namespace Drawing.classes
                         if (degreeMatrix[i, j] != 0)
                         {
                             count = degreeMatrix[i, j];
-                            for(int ind = 0; count!=0 && ind<previousWays[i].Length; ind++)
+                            for (int ind = 0; count != 0 && ind < previousWays[i].Length; ind++)
                             {
-                                int [] arr = previousWays[i][ind];
+                                int[] arr = previousWays[i][ind];
                                 int k = arr[arr.Length - 1];
                                 if (graph.Matrix[k, j] == 1)
                                 {
@@ -278,7 +286,7 @@ namespace Drawing.classes
         {
             int[,] degreeMatrix = ActMatrix.CopyMatrix(graph.Matrix);
             int[,] result = ActMatrix.GetUnitMatrix(graph.Length);
-            for (int i = 0; i < graph.Length-1; i++)
+            for (int i = 0; i < graph.Length - 1; i++)
             {
                 result = ActMatrix.AddMatrix(result, degreeMatrix);
                 if (i != graph.Length - 2)
@@ -288,6 +296,7 @@ namespace Drawing.classes
             result = ActMatrix.BooleanMapping(result);
             return result;
         }
+
         public static int[,] GetStrongConnectMatrix(DirectedGraph graph)
         {
             int[,] reach = GetReachabilityMatrix(graph);
@@ -302,6 +311,7 @@ namespace Drawing.classes
 
             return conMatrix;
         }
+
         public static int[][] GetConnectComponents(DirectedGraph graph)
         {
             int[,] connectMatrix = GetStrongConnectMatrix(graph);
@@ -310,7 +320,7 @@ namespace Drawing.classes
             int[] vertices = new int[graph.Length];
             for (int i = 0; i < graph.Length; i++)
             {
-                if(vertices[i] ==1)
+                if (vertices[i] == 1)
                     continue;
                 for (int j = 0; j < graph.Length; j++)
                 {
@@ -320,12 +330,14 @@ namespace Drawing.classes
                         vertices[j] = 1;
                     }
                 }
+
                 components.Add(compVertices.ToArray());
                 compVertices.Clear();
             }
 
             return components.ToArray();
         }
+
         public static int[,] GetCondensMatrix(DirectedGraph graph)
         {
             int[][] components = GetConnectComponents(graph);
@@ -336,7 +348,7 @@ namespace Drawing.classes
             {
                 for (int j = 0; j < length; j++)
                 {
-                    if(i==j || condMatrix[j,i] == 1)
+                    if (i == j || condMatrix[j, i] == 1)
                         continue;
                     foreach (int first in components[i])
                     {
@@ -353,12 +365,115 @@ namespace Drawing.classes
 
                         if (connection)
                             break;
-
                     }
                 }
             }
 
             return condMatrix;
+        }
+
+
+        public static (int[,] searchMatrix, int[] offsetVertices) BFS(DirectedGraph graph)
+        {
+            int[] nodeInfo = new int[graph.Length];
+            Queue<int> openNodes = new Queue<int>();
+            int k = 0;
+            int[,] searchMatrix = new int[graph.Length, graph.Length];
+            for (int i = 0; i < graph.Length; i++)
+            {
+                if (nodeInfo[i] == 0)
+                {
+                    for (int j = 0; j < graph.Length; j++)
+                    {
+                        if (nodeInfo[j] == 0 && graph.Matrix[i, j] == 1 && i != j)
+                        {
+                            openNodes.Enqueue(i);
+                            k++;
+                            nodeInfo[i] = k;
+                            break;
+                        }
+                    }
+                }
+
+                while (openNodes.Count != 0)
+                {
+                    int node = openNodes.Peek();
+                    for (int j = 0; j < graph.Length; j++)
+                    {
+                        if (nodeInfo[j] != 0 || j == node || graph.Matrix[node, j] == 0)
+                            continue;
+
+                        k++;
+                        nodeInfo[j] = k;
+                        searchMatrix[node, j] = 1;
+                        openNodes.Enqueue(j);
+                    }
+
+                    openNodes.Dequeue();
+                }
+            }
+
+            SearchRemainingVerteces(graph, nodeInfo, k);
+            return (searchMatrix, nodeInfo);
+        }
+
+
+
+
+        
+        public static (int[,] searchMatrix, int[] offsetVertices) DFS(DirectedGraph graph)
+        {
+            int[] nodeInfo = new int[graph.Length];
+            int k = 0;
+            int[,] searchMatrix = new int[graph.Length, graph.Length];
+            for (int i = 0; i < graph.Length; i++)
+            {
+                if (nodeInfo[i] == 0)
+                {
+                    for (int j = 0; j < graph.Length; j++)
+                    {
+                        if (nodeInfo[j] == 0 && graph.Matrix[i, j] == 1 && i != j)
+                        {
+                            k++;
+                            nodeInfo[i] = k;
+                            k = DepthSearch(graph, i, nodeInfo, k, searchMatrix);
+                            break;
+                        }
+                    }
+                }
+            }
+            SearchRemainingVerteces(graph, nodeInfo,k);
+            return (searchMatrix, nodeInfo);
+        }
+
+        private static int DepthSearch(DirectedGraph graph, int node, int[] nodeInfo, int k, int[,] searchMatrix)
+        {
+            
+            for (int i = 0; i < graph.Length; i++)
+            {
+                if(nodeInfo[i] != 0 || i == node || graph.Matrix[node, i] == 0)
+                    continue;
+                k++;
+                nodeInfo[i] = k;
+                searchMatrix[node, i] = 1;
+                
+                k = DepthSearch(graph, i, nodeInfo, k, searchMatrix);
+                
+
+            }
+            return k;
+        }
+        
+        private static void SearchRemainingVerteces(DirectedGraph graph, int[] nodeInfo, int k)
+        {
+            for (int i = 0; i < graph.Length; i++)
+            {
+                if (nodeInfo[i] == 0)
+                {
+                    k++;
+                    nodeInfo[i] = k;
+                }
+            }
         }
     }
 }
