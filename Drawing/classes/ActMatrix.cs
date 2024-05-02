@@ -1,4 +1,4 @@
-﻿
+
 namespace Drawing.classes
 {
     public static class ActMatrix
@@ -110,6 +110,21 @@ namespace Drawing.classes
             }
 
             return result;
+        }
+
+        public static int[,] HighTriangleUnitMatrix(int length)
+        {
+            int[,] matrix = new int[length, length];
+            for (int i = 0; i < length; i++)
+            {
+                
+                for (int j = i+1; j < length; j++)
+                {
+                    matrix[i, j] = 1;
+                }
+            }
+
+            return matrix;
         }
     }
 }
