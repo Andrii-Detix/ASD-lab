@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace Drawing.classes
 {
@@ -475,5 +475,101 @@ namespace Drawing.classes
                 }
             }
         }
+
+        public static EdgeLinkedList GetMinSkeleton(WeightedGraph graph)
+        {
+            int numEdges = graph.Length - 1;
+            EdgeLinkedList edges = graph.ToLinkedList();
+            edges.Sort();
+            EdgeLinkedList skeleton = new EdgeLinkedList();
+
+            while (!(skeleton.Count() == numEdges || edges.GetFirst() == null))
+            {
+                Edge edge = edges.DeleteFirst();
+                if(edge.Vertex1 == edge.Vertex2)
+                    continue;
+                skeleton.AddLast(edge);
+                if (HasLoop(skeleton))
+                {
+                    skeleton.DeleteLast();
+                }
+            }
+
+            return skeleton;
+        }
+
+        
+        private static bool HasLoop(EdgeLinkedList edges)
+        {
+            MyLinkedList<int> foundVert = new MyLinkedList<int>();
+            var nodes = new MyStack<Node<Edge>>();
+            var prevVertices = new MyStack<int>();
+            Node<Edge> curNode = edges.GetFirst();
+
+            while (curNode != null)
+            {
+                int curVertex = curNode.value.Vertex1;
+                if (foundVert.Include(curVertex))
+                {
+                    curNode = curNode.next;
+                    continue;
+                }
+                
+                foundVert.AddFirst(curVertex);
+                prevVertices.Push(curVertex);
+                nodes.Push(curNode);
+                curVertex = curNode.value.Vertex2;
+                foundVert.AddFirst(curVertex);
+                nodes.Push(curNode);
+                prevVertices.Push(curVertex);
+                Node<Edge> tempNode = edges.GetFirst();
+                while (!prevVertices.isEmpty() )
+                {
+                    if (tempNode == null)
+                    {
+                        tempNode = nodes.Pop().next;
+                        prevVertices.Pop();
+                        if (!prevVertices.isEmpty())
+                            curVertex = prevVertices.Peek();
+
+                        continue;
+                    }
+                    if (tempNode == nodes.Peek())
+                    {
+                        tempNode = tempNode.next;
+                        continue;
+                    }
+
+                    int helpVertex;
+                    if (tempNode.value.Vertex1 == curVertex)
+                        helpVertex = tempNode.value.Vertex2;
+                    else if (tempNode.value.Vertex2 == curVertex)
+                        helpVertex = tempNode.value.Vertex1;
+                    else
+                    {
+                        tempNode = tempNode.next;
+                        continue;
+                    }
+
+                    if (foundVert.Include(helpVertex))
+                    {
+                        return true;
+                    }
+                    
+                    foundVert.AddFirst(helpVertex);
+                    prevVertices.Push(helpVertex);
+                    curVertex = helpVertex;
+                    nodes.Push(tempNode);
+                    tempNode = edges.GetFirst();
+
+                }
+
+                curNode =  curNode.next;
+
+            }
+
+            return false;
+        }
+        
     }
 }
