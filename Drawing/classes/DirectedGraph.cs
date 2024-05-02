@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 
 namespace Drawing.classes
@@ -139,12 +139,32 @@ namespace Drawing.classes
         }
 
         protected virtual bool CheckDirection() => true;
+
+        public virtual EdgeLinkedList ToLinkedList()
+        {
+            EdgeLinkedList list = new EdgeLinkedList();
+            for (int i = 0; i < Length; i++)
+            {
+                for (int j = 0; j < Length; j++)
+                {
+                    if(Matrix[i,j]==1)
+                        list.AddFirst(new Edge(i,j,0));
+                }
+            }
+
+            return list;
+        }
     }
 
 
     public class UndirectedGraph : DirectedGraph
     {
         public UndirectedGraph(int variant,double[]coefs, float width, float height) : base(variant, coefs, width, height)
+        {
+            
+        }
+
+        public UndirectedGraph(int[,] matrix, float width, float height) : base(matrix, width, height)
         {
             
         }
@@ -165,5 +185,83 @@ namespace Drawing.classes
         }
 
         protected override bool CheckDirection() => false;
+    }
+
+    public class WeightedGraph : UndirectedGraph
+    {
+        public WeightedGraph(int variant,double[]coefs, float width, float height) : base(variant, coefs, width, height)
+        {
+            WeightedMatrix = GetWeightMatrix(Length, variant);
+        }
+
+        public WeightedGraph(int[,] adjMatrix, int[,] weightedMatrix, float width, float height):base(adjMatrix,width,height)
+        {
+            WeightedMatrix = weightedMatrix;
+        }
+        
+        public int[,] WeightedMatrix { get;  }
+
+        protected int[,] GetWeightMatrix(int length, int variant)
+        {
+            double[,] B = new double[length, length];
+            B = FillMatrix(B, variant);
+            int[,] C = new int[length, length];
+            for (int i = 0; i < length; i++)
+            {
+                for (int j = 0; j < length; j++)
+                {
+                    C[i, j] = (int)Math.Ceiling(B[i, j] * 100 * Matrix[i, j]);
+                }
+            }
+
+            int[,] D = new int[length, length];
+            for (int i = 0; i < length; i++)
+            {
+                for (int j = 0; j < length; j++)
+                {
+                    D[i, j] = (C[i, j] == 0 ? 0 : 1);
+                }
+            }
+
+            int[,] H = new int[length, length];
+            for (int i = 0; i < length; i++)
+            {
+                for (int j = i; j < length; j++)
+                {
+                    int num = (D[i, j] == D[j, i] ? 0 : 1);
+                    H[i, j] = num;
+                    H[j, i] = num;
+                }
+            }
+
+            int[,] Tr = ActMatrix.HighTriangleUnitMatrix(length);
+            int[,] weighted = new int[length, length];
+            for (int i = 0; i < length; i++)
+            {
+                for (int j = i; j < length; j++)
+                {
+                    int value = (D[i, j] + H[i, j] * Tr[i, j]) * C[i, j];
+                    weighted[i, j] = value;
+                    weighted[j, i] = value;
+                }
+            }
+
+            return weighted;
+        }
+
+        public override EdgeLinkedList ToLinkedList()
+        {
+            EdgeLinkedList list = new EdgeLinkedList();
+            for (int i = 0; i < Length; i++)
+            {
+                for (int j = i; j < Length; j++)
+                {
+                    if(Matrix[i,j] == 1)
+                        list.AddFirst(new Edge(i,j,WeightedMatrix[i,j]));
+                }
+            }
+
+            return list;
+        }
     }
 }
